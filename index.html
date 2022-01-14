@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0'>
@@ -11,7 +12,7 @@
         .frostedGlass {
             border-radius: 20px;
             overflow: hidden;
-            background-color: rgba(0,0,0,0.8);
+            background-color: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(5px)
         }
 
@@ -73,7 +74,7 @@
 
         .settingForm {
             display: flex;
-            max-width:100%;
+            max-width: 100%;
             flex-wrap: wrap;
             padding-top: 10px;
             padding-bottom: 10px;
@@ -101,8 +102,8 @@
             -moz-transition: max-height 0.8s ease-in-out;
         }
 
-        .noDisplay{
-            display:none
+        .noDisplay {
+            display: none
         }
 
         .radioSpace {
@@ -117,9 +118,9 @@
             flex: 1 1 0;
             text-align: center
         }
-
     </style>
 </head>
+
 <body style="padding:0px;margin:0px;width:100vw;height:100vh">
     <div id="info" style="position:absolute;top:0px; left:0px"></div>
     <div id="controlPanel" class="controlPanel frostedGlass" data-collapsed="false">
@@ -132,7 +133,8 @@
             <div class="settingForm">
                 <label class="btnLabel noDisplay"><input type="file" name="settingForm" accept=".raw">load .raw</label>
                 <label class="btnLabel noDisplay"><input type="file" name="settingForm" accept=".tf">load .tf</label>
-                <label class="btnLabel noDisplay"><input type="file" name="settingForm" accept=".sbdat">load .sbdat</label>
+                <label class="btnLabel noDisplay"><input type="file" name="settingForm" accept=".sbdat">load
+                    .sbdat</label>
                 <label class="btnLabel noDisplay" name="settingForm">sized based</label>
                 <label class="btnLabel noDisplay" name="settingForm">save .tf</label>
                 <label class="btnLabel noDisplay" name="settingForm">save .sbdat</label>
@@ -151,7 +153,7 @@
     <script src="js/scoreoutputer.min.js"></script>
     <script>
         // 建構子 ScoreOutputer 接受一個字串，該字串為 csv 的檔案名稱
-        var so = new ScoreOutputer("109114514");
+        var so = new ScoreOutputer("109598029");
         so.installCSS(function () {
             // 安裝 bootstrap 的 css，如果在 html 上方引用 bootstrap 5.1.1 的話就不用使用 installCSS ，注意一定要 bootstrap css 5.1.1 版
             // installCSS 接收一個 callback 當作參數，作為成功安裝 bootstrap css 的回呼函式
@@ -165,7 +167,7 @@
             so.addChild("讀取文件並顯示資訊", 4, true);
             so.addChild("使用直接法渲染影像(MIPS)", 2, true);
             so.addChild("使用直接法渲染影像(ISO)", 2, true);
-            so.addChild("使用調色盤變更材質的colormap", 2, false);
+            so.addChild("使用調色盤變更材質的colormap", 2, true);
 
             //產生自評表，參數如下所示
             so.renderModal(
@@ -326,14 +328,31 @@
 
             //MIPS or ISO
             document.querySelectorAll('input[name=rtype]').forEach((option) => {
-                option.addEventListener('click', (evt) => { })
+                option.addEventListener('click', (evt) => {
+                    let selectedValue = document.querySelector('input[name="rtype"]:checked').value;
+                    if (selectedValue === 'iso') {
+                        arg.renderType = 1;
+                    } else if (selectedValue === 'mips') {
+                        arg.renderType = 0;
+                    }
+                    controlView.updateRGBA()
+                })
             })
 
             arg.renderType = 0
 
             // RAW文件讀取
             loadLocalRawFile('./raw/CTchest_64_64_64_uint8.raw', (result) => {
+                let width = 64;
+                let height = 64;
+                let depth = 64;
+                let bit = 8;
 
+                let data = new Uint8ClampedArray(result);
+
+                field = new ScaleField(width, height, depth, data, arg.rgba);
+
+                controlView.updateVolumeData(field);
             })
         }
 
@@ -342,11 +361,17 @@
             controlView = new ControlView(document.getElementById('palette'), arg)
 
             //當調色盤的參數變更時，觸發事件
-            controlView.addEventListener('change', () => {})
+            controlView.addEventListener('change', () => {
+                if(field == null) return;
+
+                modelView.renderVolume(field, getColormap(), arg)
+
+            });
 
             init()
         }
     </script>
 
 </body>
+
 </html>
